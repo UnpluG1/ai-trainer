@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, RefreshCw, Utensils, Trash2, Flame, Scan } from 'lucide-react';
 import { addDoc, collection, doc, deleteDoc } from 'firebase/firestore';
-import { db, appId } from '../services/firebase';
+import { db } from '../services/firebase';
 import { callGemini } from '../services/gemini';
 
 const FoodLogs = ({ user, foodLogs }) => {
@@ -19,7 +19,7 @@ const FoodLogs = ({ user, foodLogs }) => {
         if (res) {
             try {
                 const food = JSON.parse(res);
-                await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'foodLogs'), {
+                await addDoc(collection(db, 'users', user.uid, 'foodLogs'), {
                     ...food,
                     date: new Date().toLocaleDateString(),
                     timestamp: Date.now(),
@@ -104,7 +104,7 @@ const FoodLogs = ({ user, foodLogs }) => {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'foodLogs', log.id))}
+                                    onClick={() => deleteDoc(doc(db, 'users', user.uid, 'foodLogs', log.id))}
                                     className="w-10 h-10 flex items-center justify-center rounded-xl text-slate-300 hover:text-white hover:bg-rose-500 transition-all active:scale-90"
                                 >
                                     <Trash2 className="w-5 h-5" />

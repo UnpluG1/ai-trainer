@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
 import { LogOut, RefreshCw, Sparkles } from 'lucide-react';
 
-import { auth, db, appId } from './services/firebase';
+import { auth, db } from './services/firebase';
 import { callGemini } from './services/gemini';
 
 import Auth from './components/Auth';
@@ -55,18 +55,18 @@ const App = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const todayLocale = new Date().toLocaleDateString();
 
-    const dailyRef = doc(db, 'artifacts', appId, 'users', user.uid, 'dailyLogs', todayStr);
+    const dailyRef = doc(db, 'users', user.uid, 'dailyLogs', todayStr);
     const unsubDaily = onSnapshot(dailyRef, (snap) => {
       if (snap.exists()) setDailyData(snap.data());
     });
 
-    const historyCol = collection(db, 'artifacts', appId, 'users', user.uid, 'dailyLogs');
+    const historyCol = collection(db, 'users', user.uid, 'dailyLogs');
     const unsubHistory = onSnapshot(historyCol, (snap) => {
       const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       setHistoryLogs(logs.sort((a, b) => b.date.localeCompare(a.date)));
     });
 
-    const foodCol = collection(db, 'artifacts', appId, 'users', user.uid, 'foodLogs');
+    const foodCol = collection(db, 'users', user.uid, 'foodLogs');
     const unsubFood = onSnapshot(foodCol, (snap) => {
       const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         .filter(l => l.date === todayLocale);
@@ -74,7 +74,7 @@ const App = () => {
     });
 
     // Profile Data Subscription
-    const profileRef = doc(db, 'artifacts', appId, 'users', user.uid);
+    const profileRef = doc(db, 'users', user.uid);
     const unsubProfile = onSnapshot(profileRef, (snap) => {
       if (snap.exists()) {
         setProfile(snap.data());
@@ -87,7 +87,7 @@ const App = () => {
   const updateDailyField = async (field, value) => {
     if (!user) return;
     const todayStr = new Date().toISOString().split('T')[0];
-    const dailyRef = doc(db, 'artifacts', appId, 'users', user.uid, 'dailyLogs', todayStr);
+    const dailyRef = doc(db, 'users', user.uid, 'dailyLogs', todayStr);
     const newData = { ...dailyData, [field]: value, date: todayStr };
     setDailyData(newData);
     await setDoc(dailyRef, newData, { merge: true });
@@ -95,7 +95,7 @@ const App = () => {
 
   const updateProfile = async (field, value) => {
     if (!user) return;
-    const profileRef = doc(db, 'artifacts', appId, 'users', user.uid);
+    const profileRef = doc(db, 'users', user.uid);
     const newData = { ...profile, [field]: value };
     setProfile(newData);
     await setDoc(profileRef, newData, { merge: true });
