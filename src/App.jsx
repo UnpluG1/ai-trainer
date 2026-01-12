@@ -24,12 +24,23 @@ const App = () => {
     stressLevel: 3,
     energyLevel: 3,
     soreness: 'none',
+    workoutType: 'Rest',
+    workoutDuration: 0,
+    workoutIntensity: 'Low',
+    waterIntake: 0,
   });
 
   const [foodLogs, setFoodLogs] = useState([]);
   const [historyLogs, setHistoryLogs] = useState([]);
   const [trainerAdvice, setTrainerAdvice] = useState(null);
   const [isConsulting, setIsConsulting] = useState(false);
+
+  const [profile, setProfile] = useState({
+    height: 170,
+    age: 25,
+    gender: 'Male',
+    goal: 'Maintain',
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -62,7 +73,15 @@ const App = () => {
       setFoodLogs(logs.sort((a, b) => b.timestamp - a.timestamp));
     });
 
-    return () => { unsubDaily(); unsubHistory(); unsubFood(); };
+    // Profile Data Subscription
+    const profileRef = doc(db, 'artifacts', appId, 'users', user.uid);
+    const unsubProfile = onSnapshot(profileRef, (snap) => {
+      if (snap.exists()) {
+        setProfile(snap.data());
+      }
+    });
+
+    return () => { unsubDaily(); unsubHistory(); unsubFood(); unsubProfile(); };
   }, [user]);
 
   const updateDailyField = async (field, value) => {
@@ -74,12 +93,23 @@ const App = () => {
     await setDoc(dailyRef, newData, { merge: true });
   };
 
+  const updateProfile = async (field, value) => {
+    if (!user) return;
+    const profileRef = doc(db, 'artifacts', appId, 'users', user.uid);
+    const newData = { ...profile, [field]: value };
+    setProfile(newData);
+    await setDoc(profileRef, newData, { merge: true });
+  };
+
   const getTrainerAnalysis = async () => {
     if (!user) return;
     setIsConsulting(true);
     const context = `
-      ข้อมูลร่างกาย: น้ำหนัก ${dailyData.weight}kg, นอน ${dailyData.sleepHours} ชม., พลังงาน ${dailyData.energyLevel}/5, ความเครียด ${dailyData.stressLevel}/5.
-      อาหารวันนี้: ${foodLogs.map(f => f.name).join(', ')} (${foodLogs.reduce((a, b) => a + b.kcal, 0)} kcal).
+      ข้อมูลส่วนตัว: อายุ ${profile.age} ปี, เพศ ${profile.gender}, สูง ${profile.height} ซม., เป้าหมาย: ${profile.goal}.
+      ข้อมูลวันนี้: น้ำหนัก ${dailyData.weight}kg, นอน ${dailyData.sleepHours} ชม., น้ำดื่ม ${dailyData.waterIntake} แก้ว.
+      การออกกำลังกาย: ${dailyData.workoutType} (${dailyData.workoutDuration} นาที, ความเข้มข้น ${dailyData.workoutIntensity}).
+      ระดับพลังงาน: ${dailyData.energyLevel}/5, ความเครียด: ${dailyData.stressLevel}/5.
+      อาหารที่ทาน: ${foodLogs.map(f => f.name).join(', ')} (รวม ${foodLogs.reduce((a, b) => a + b.kcal, 0)} kcal).
     `;
     const advice = await callGemini(
       context,
@@ -143,7 +173,7 @@ const App = () => {
         )}
 
         {activeTab === 'profile' && (
-          <Profile user={user} signOut={() => signOut(auth)} />
+          <Profile user={user} profile={profile} updateProfile={updateProfile} signOut={() => signOut(auth)} />
         )}
       </main>
 

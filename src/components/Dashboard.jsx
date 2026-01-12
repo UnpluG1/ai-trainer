@@ -45,6 +45,46 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                        <div className="glass-panel bg-white/5 border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center gap-2 transition-transform hover:scale-105">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Water</span>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => updateDailyField('waterIntake', Math.max(0, dailyData.waterIntake - 1))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
+                                <span className="text-2xl font-black w-8 text-center">{dailyData.waterIntake}</span>
+                                <button onClick={() => updateDailyField('waterIntake', dailyData.waterIntake + 1)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
+                            </div>
+                            <span className="text-[10px] text-slate-400">glasses</span>
+                        </div>
+                        <div className="glass-panel bg-white/5 border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center gap-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Workout</span>
+                            <input
+                                type="text"
+                                placeholder="Type"
+                                value={dailyData.workoutType}
+                                onChange={e => updateDailyField('workoutType', e.target.value)}
+                                className="bg-transparent border-b border-white/20 w-full text-center text-sm font-bold placeholder:text-slate-600 focus:outline-none focus:border-indigo-400"
+                            />
+                            <div className="flex items-center gap-1 w-full">
+                                <input
+                                    type="number"
+                                    value={dailyData.workoutDuration}
+                                    onChange={e => updateDailyField('workoutDuration', Number(e.target.value))}
+                                    className="bg-transparent border-b border-white/20 w-1/2 text-center text-sm font-bold focus:outline-none focus:border-indigo-400"
+                                />
+                                <span className="text-[10px] text-slate-400">min</span>
+                            </div>
+                            <select
+                                value={dailyData.workoutIntensity}
+                                onChange={e => updateDailyField('workoutIntensity', e.target.value)}
+                                className="bg-white/10 border-none rounded-lg text-[10px] text-slate-300 w-full p-1 mt-1 text-center outline-none"
+                            >
+                                <option value="Low" className="text-slate-800">Low Intensity</option>
+                                <option value="Medium" className="text-slate-800">Medium</option>
+                                <option value="High" className="text-slate-800">High Intensity</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="space-y-6">
                         <div className="space-y-3">
                             <div className="flex justify-between items-end">
