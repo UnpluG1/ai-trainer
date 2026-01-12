@@ -1,9 +1,10 @@
 import React from 'react';
-import { Target, Utensils, History as HistoryIcon, User } from 'lucide-react';
+import { Target, Utensils, History as HistoryIcon, User, Calendar } from 'lucide-react';
 
 const Navigation = ({ activeTab, setActiveTab }) => {
     const tabs = [
         { id: 'dashboard', icon: Target },
+        { id: 'plan', icon: Calendar },
         { id: 'logs', icon: Utensils },
         { id: 'history', icon: HistoryIcon },
         { id: 'profile', icon: User }

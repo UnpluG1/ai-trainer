@@ -12,6 +12,7 @@ import FoodLogs from './components/FoodLogs';
 import History from './components/History';
 import Profile from './components/Profile';
 import Navigation from './components/Navigation';
+import WorkoutPlanner from './components/WorkoutPlanner';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -28,6 +29,9 @@ const App = () => {
     workoutDuration: 0,
     workoutIntensity: 'Low',
     waterIntake: 0,
+    waist: '',
+    hip: '',
+    chest: '',
   });
 
   const [foodLogs, setFoodLogs] = useState([]);
@@ -41,6 +45,7 @@ const App = () => {
     gender: 'Male',
     goal: 'Maintain',
   });
+  const [workoutPlan, setWorkoutPlan] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -81,7 +86,15 @@ const App = () => {
       }
     });
 
-    return () => { unsubDaily(); unsubHistory(); unsubFood(); unsubProfile(); };
+    // Workout Plan Subscription
+    const planRef = doc(db, 'users', user.uid, 'plans', 'current');
+    const unsubPlan = onSnapshot(planRef, (snap) => {
+      if (snap.exists()) {
+        setWorkoutPlan(snap.data().plan);
+      }
+    });
+
+    return () => { unsubDaily(); unsubHistory(); unsubFood(); unsubProfile(); unsubPlan(); };
   }, [user]);
 
   const saveDailyData = async (newData) => {
@@ -167,6 +180,9 @@ const App = () => {
             isConsulting={isConsulting}
             getTrainerAnalysis={getTrainerAnalysis}
             trainerAdvice={trainerAdvice}
+            foodLogs={foodLogs}
+            profile={profile}
+            workoutPlan={workoutPlan}
           />
         )}
 
@@ -178,8 +194,18 @@ const App = () => {
           <History historyLogs={historyLogs} />
         )}
 
+        {activeTab === 'plan' && (
+          <WorkoutPlanner user={user} profile={profile} />
+        )}
+
         {activeTab === 'profile' && (
-          <Profile user={user} profile={profile} saveProfileData={saveProfileData} signOut={() => signOut(auth)} />
+          <Profile
+            user={user}
+            profile={profile}
+            currentWeight={dailyData.weight}
+            saveProfileData={saveProfileData}
+            signOut={() => signOut(auth)}
+          />
         )}
       </main>
 
