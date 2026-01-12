@@ -1,9 +1,31 @@
 import React from 'react';
 import { User, LogOut, Settings, Award } from 'lucide-react';
 
-const Profile = ({ user, profile, updateProfile, signOut }) => {
+const Profile = ({ user, profile, saveProfileData, signOut }) => {
+    const [localProfile, setLocalProfile] = React.useState(profile);
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [saveSuccess, setSaveSuccess] = React.useState(false);
+
+    // Sync local state when external profile changes
+    React.useEffect(() => {
+        if (profile) setLocalProfile(profile);
+    }, [profile]);
+
+    const handleChange = (field, value) => {
+        setLocalProfile(prev => ({ ...prev, [field]: value }));
+        setSaveSuccess(false);
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        await saveProfileData(localProfile);
+        setIsSaving(false);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+    };
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 pb-8">
+        <div className="space-y-6 animate-in fade-in duration-500 pb-24">
             <section className="bg-white rounded-[2.5rem] p-10 shadow-xl border border-slate-100 flex flex-col items-center">
                 <div className="relative mb-6 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
@@ -24,8 +46,8 @@ const Profile = ({ user, profile, updateProfile, signOut }) => {
                             <label className="text-[10px] font-bold text-slate-400 uppercase">Height (cm)</label>
                             <input
                                 type="number"
-                                value={profile.height}
-                                onChange={(e) => updateProfile('height', Number(e.target.value))}
+                                value={localProfile.height}
+                                onChange={(e) => handleChange('height', Number(e.target.value))}
                                 className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all text-center"
                             />
                         </div>
@@ -33,16 +55,16 @@ const Profile = ({ user, profile, updateProfile, signOut }) => {
                             <label className="text-[10px] font-bold text-slate-400 uppercase">Age</label>
                             <input
                                 type="number"
-                                value={profile.age}
-                                onChange={(e) => updateProfile('age', Number(e.target.value))}
+                                value={localProfile.age}
+                                onChange={(e) => handleChange('age', Number(e.target.value))}
                                 className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all text-center"
                             />
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-slate-400 uppercase">Gender</label>
                             <select
-                                value={profile.gender}
-                                onChange={(e) => updateProfile('gender', e.target.value)}
+                                value={localProfile.gender}
+                                onChange={(e) => handleChange('gender', e.target.value)}
                                 className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all text-center appearance-none"
                             >
                                 <option value="Male">Male</option>
@@ -52,8 +74,8 @@ const Profile = ({ user, profile, updateProfile, signOut }) => {
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-slate-400 uppercase">Goal</label>
                             <select
-                                value={profile.goal}
-                                onChange={(e) => updateProfile('goal', e.target.value)}
+                                value={localProfile.goal}
+                                onChange={(e) => handleChange('goal', e.target.value)}
                                 className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all text-center appearance-none"
                             >
                                 <option value="Lose Weight">Lose Weight</option>
@@ -63,7 +85,20 @@ const Profile = ({ user, profile, updateProfile, signOut }) => {
                         </div>
                     </div>
 
-                    <div className="pt-4 space-y-3">
+                    {/* Save Button */}
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className={`w-full py-4 px-6 rounded-2xl font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2 shadow-lg mb-4 ${saveSuccess
+                                ? 'bg-green-500 text-white shadow-green-500/50'
+                                : 'bg-indigo-600 text-white shadow-indigo-500/30 hover:bg-indigo-700'
+                            }`}
+                    >
+                        {isSaving ? <RefreshCw className="w-5 h-5 animate-spin" /> : saveSuccess ? 'Saved!' : 'Save Profile'}
+                    </button>
+                    {saveSuccess && <p className="text-center text-[10px] text-green-400 font-bold -mt-2 uppercase tracking-widest animate-pulse">Profile updated</p>}
+
+                    <div className="pt-4 space-y-3 border-t border-slate-100 mt-4">
                         <button className="w-full py-4 px-6 rounded-2xl bg-slate-50 text-slate-600 font-bold text-sm tracking-wide flex items-center justify-between hover:bg-slate-100 transition-colors">
                             <span className="flex items-center gap-3"><Settings className="w-5 h-5 text-slate-400" /> Account Settings</span>
                             <span className="text-slate-300">→</span>
@@ -76,6 +111,8 @@ const Profile = ({ user, profile, updateProfile, signOut }) => {
                 </div>
             </section>
 
+            <p className="text-slate-400 text-sm">Update your personal stats for better AI accuracy.</p>
+            <p className="text-[10px] text-slate-300 mt-1 uppercase tracking-widest">v1.1.0 (Sync Fix)</p>
             <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest">
                 Trainer Pro v1.0.0
             </p>

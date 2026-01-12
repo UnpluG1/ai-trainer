@@ -21,7 +21,7 @@ const FoodLogs = ({ user, foodLogs }) => {
                 const food = JSON.parse(res);
                 await addDoc(collection(db, 'users', user.uid, 'foodLogs'), {
                     ...food,
-                    date: new Date().toLocaleDateString(),
+                    date: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`,
                     timestamp: Date.now(),
                     time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
                 });

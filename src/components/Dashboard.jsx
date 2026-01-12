@@ -1,9 +1,31 @@
 import React from 'react';
 import { Activity, BrainCircuit, ChevronRight, RefreshCw, MessageSquareQuote, Moon, Zap, AlertCircle } from 'lucide-react';
 
-const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalysis, trainerAdvice }) => {
+const Dashboard = ({ dailyData, saveDailyData, isConsulting, getTrainerAnalysis, trainerAdvice }) => {
+    const [localData, setLocalData] = React.useState(dailyData);
+    const [isSaving, setIsSaving] = React.useState(false);
+    const [saveSuccess, setSaveSuccess] = React.useState(false);
+
+    // Sync local state when external dailyData changes (e.g. initial load)
+    React.useEffect(() => {
+        if (dailyData) setLocalData(dailyData);
+    }, [dailyData]);
+
+    const handleChange = (field, value) => {
+        setLocalData(prev => ({ ...prev, [field]: value }));
+        setSaveSuccess(false);
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        await saveDailyData(localData);
+        setIsSaving(false);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+    };
+
     return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-8">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
             {/* Daily Stats Card */}
             <section className="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-slate-900/20">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -23,8 +45,8 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                             <div className="flex items-baseline gap-1">
                                 <input
                                     type="number"
-                                    value={dailyData.weight}
-                                    onChange={e => updateDailyField('weight', Number(e.target.value))}
+                                    value={localData.weight}
+                                    onChange={e => handleChange('weight', Number(e.target.value))}
                                     className="bg-transparent border-none p-0 text-4xl font-black w-24 text-center focus:ring-0 text-white drop-shadow-sm"
                                 />
                                 <span className="text-sm font-medium text-slate-400">kg</span>
@@ -36,8 +58,8 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                             <div className="flex items-baseline gap-1">
                                 <input
                                     type="number"
-                                    value={dailyData.sleepHours}
-                                    onChange={e => updateDailyField('sleepHours', Number(e.target.value))}
+                                    value={localData.sleepHours}
+                                    onChange={e => handleChange('sleepHours', Number(e.target.value))}
                                     className="bg-transparent border-none p-0 text-4xl font-black w-20 text-center focus:ring-0 text-white drop-shadow-sm"
                                 />
                                 <span className="text-sm font-medium text-slate-400">hr</span>
@@ -49,9 +71,9 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                         <div className="glass-panel bg-white/5 border-white/10 p-5 rounded-3xl flex flex-col items-center justify-center gap-2 transition-transform hover:scale-105">
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Water</span>
                             <div className="flex items-center gap-3">
-                                <button onClick={() => updateDailyField('waterIntake', Math.max(0, dailyData.waterIntake - 1))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
-                                <span className="text-2xl font-black w-8 text-center">{dailyData.waterIntake}</span>
-                                <button onClick={() => updateDailyField('waterIntake', dailyData.waterIntake + 1)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
+                                <button onClick={() => handleChange('waterIntake', Math.max(0, localData.waterIntake - 1))} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">-</button>
+                                <span className="text-2xl font-black w-8 text-center">{localData.waterIntake}</span>
+                                <button onClick={() => handleChange('waterIntake', localData.waterIntake + 1)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">+</button>
                             </div>
                             <span className="text-[10px] text-slate-400">glasses</span>
                         </div>
@@ -60,22 +82,22 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                             <input
                                 type="text"
                                 placeholder="Type"
-                                value={dailyData.workoutType}
-                                onChange={e => updateDailyField('workoutType', e.target.value)}
+                                value={localData.workoutType}
+                                onChange={e => handleChange('workoutType', e.target.value)}
                                 className="bg-transparent border-b border-white/20 w-full text-center text-sm font-bold placeholder:text-slate-600 focus:outline-none focus:border-indigo-400"
                             />
                             <div className="flex items-center gap-1 w-full">
                                 <input
                                     type="number"
-                                    value={dailyData.workoutDuration}
-                                    onChange={e => updateDailyField('workoutDuration', Number(e.target.value))}
+                                    value={localData.workoutDuration}
+                                    onChange={e => handleChange('workoutDuration', Number(e.target.value))}
                                     className="bg-transparent border-b border-white/20 w-1/2 text-center text-sm font-bold focus:outline-none focus:border-indigo-400"
                                 />
                                 <span className="text-[10px] text-slate-400">min</span>
                             </div>
                             <select
-                                value={dailyData.workoutIntensity}
-                                onChange={e => updateDailyField('workoutIntensity', e.target.value)}
+                                value={localData.workoutIntensity}
+                                onChange={e => handleChange('workoutIntensity', e.target.value)}
                                 className="bg-white/10 border-none rounded-lg text-[10px] text-slate-300 w-full p-1 mt-1 text-center outline-none"
                             >
                                 <option value="Low" className="text-slate-800">Low Intensity</option>
@@ -91,14 +113,14 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                                 <div className="flex items-center gap-2 text-indigo-300 text-sm font-bold uppercase tracking-wide">
                                     <Zap className="w-4 h-4" /> Energy
                                 </div>
-                                <span className="text-2xl font-black">{dailyData.energyLevel}/5</span>
+                                <span className="text-2xl font-black">{localData.energyLevel}/5</span>
                             </div>
                             <input
                                 type="range"
                                 min="1"
                                 max="5"
-                                value={dailyData.energyLevel}
-                                onChange={e => updateDailyField('energyLevel', Number(e.target.value))}
+                                value={localData.energyLevel}
+                                onChange={e => handleChange('energyLevel', Number(e.target.value))}
                                 className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
                             />
                         </div>
@@ -108,18 +130,31 @@ const Dashboard = ({ dailyData, updateDailyField, isConsulting, getTrainerAnalys
                                 <div className="flex items-center gap-2 text-purple-300 text-sm font-bold uppercase tracking-wide">
                                     <AlertCircle className="w-4 h-4" /> Stress
                                 </div>
-                                <span className="text-2xl font-black">{dailyData.stressLevel}/5</span>
+                                <span className="text-2xl font-black">{localData.stressLevel}/5</span>
                             </div>
                             <input
                                 type="range"
                                 min="1"
                                 max="5"
-                                value={dailyData.stressLevel}
-                                onChange={e => updateDailyField('stressLevel', Number(e.target.value))}
+                                value={localData.stressLevel}
+                                onChange={e => handleChange('stressLevel', Number(e.target.value))}
                                 className="w-full h-3 bg-white/10 rounded-full appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400 transition-all"
                             />
                         </div>
                     </div>
+
+                    {/* Save Button */}
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className={`w-full mt-6 py-4 rounded-2xl font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2 shadow-lg ${saveSuccess
+                                ? 'bg-green-500 text-white shadow-green-500/50'
+                                : 'bg-white text-slate-900 hover:bg-slate-50'
+                            }`}
+                    >
+                        {isSaving ? <RefreshCw className="w-5 h-5 animate-spin" /> : saveSuccess ? 'Saved Automatically!' : 'Save Daily Log'}
+                    </button>
+                    {saveSuccess && <p className="text-center text-[10px] text-green-400 font-bold mt-2 uppercase tracking-widest animate-pulse">Changes saved successfully</p>}
                 </div>
             </section>
 

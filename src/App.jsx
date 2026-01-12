@@ -52,8 +52,8 @@ const App = () => {
 
   useEffect(() => {
     if (!user) return;
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayLocale = new Date().toLocaleDateString();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     const dailyRef = doc(db, 'users', user.uid, 'dailyLogs', todayStr);
     const unsubDaily = onSnapshot(dailyRef, (snap) => {
@@ -69,7 +69,7 @@ const App = () => {
     const foodCol = collection(db, 'users', user.uid, 'foodLogs');
     const unsubFood = onSnapshot(foodCol, (snap) => {
       const logs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .filter(l => l.date === todayLocale);
+        .filter(l => l.date === todayStr);
       setFoodLogs(logs.sort((a, b) => b.timestamp - a.timestamp));
     });
 
@@ -84,21 +84,27 @@ const App = () => {
     return () => { unsubDaily(); unsubHistory(); unsubFood(); unsubProfile(); };
   }, [user]);
 
-  const updateDailyField = async (field, value) => {
+  const saveDailyData = async (newData) => {
     if (!user) return;
     const todayStr = new Date().toISOString().split('T')[0];
     const dailyRef = doc(db, 'users', user.uid, 'dailyLogs', todayStr);
-    const newData = { ...dailyData, [field]: value, date: todayStr };
-    setDailyData(newData);
-    await setDoc(dailyRef, newData, { merge: true });
+
+    // Ensure standard date format is preserved/added
+    const finalData = {
+      ...dailyData,
+      ...newData,
+      date: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
+    };
+
+    setDailyData(finalData);
+    await setDoc(dailyRef, finalData, { merge: true });
   };
 
-  const updateProfile = async (field, value) => {
+  const saveProfileData = async (newProfile) => {
     if (!user) return;
     const profileRef = doc(db, 'users', user.uid);
-    const newData = { ...profile, [field]: value };
-    setProfile(newData);
-    await setDoc(profileRef, newData, { merge: true });
+    setProfile(newProfile);
+    await setDoc(profileRef, newProfile, { merge: true });
   };
 
   const getTrainerAnalysis = async () => {
@@ -157,7 +163,7 @@ const App = () => {
         {activeTab === 'dashboard' && (
           <Dashboard
             dailyData={dailyData}
-            updateDailyField={updateDailyField}
+            saveDailyData={saveDailyData}
             isConsulting={isConsulting}
             getTrainerAnalysis={getTrainerAnalysis}
             trainerAdvice={trainerAdvice}
@@ -173,7 +179,7 @@ const App = () => {
         )}
 
         {activeTab === 'profile' && (
-          <Profile user={user} profile={profile} updateProfile={updateProfile} signOut={() => signOut(auth)} />
+          <Profile user={user} profile={profile} saveProfileData={saveProfileData} signOut={() => signOut(auth)} />
         )}
       </main>
 
